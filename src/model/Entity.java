@@ -1,4 +1,4 @@
-package models;
+package model;
 
 public abstract class Entity {
     protected int id;

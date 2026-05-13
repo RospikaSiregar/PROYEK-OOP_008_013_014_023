@@ -1,4 +1,4 @@
-package models;
+package model;
 
 public class Menu extends Entity {
     private String nama;

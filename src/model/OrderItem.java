@@ -1,4 +1,4 @@
-package models;
+package model;
 
 public class OrderItem extends Entity {
     private int orderId;

@@ -1,4 +1,4 @@
-package models;
+package model;
 
 public class Customer extends Entity {
     private String nama;
