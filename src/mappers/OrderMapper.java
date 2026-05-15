@@ -6,7 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import models.Order;
-import models.OrderItem;
+import model.OrderItem;
 
 public class OrderMapper {
 
