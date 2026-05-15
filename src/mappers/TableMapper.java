@@ -5,7 +5,7 @@ import database.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import model.Table;
+import models.Table;
 
 public class TableMapper {
 

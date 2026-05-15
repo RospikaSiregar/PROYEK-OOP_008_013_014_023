@@ -4,7 +4,7 @@ import database.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import model.Customer;
+import models.Customer;
 
 public class CustomerMapper {
 
