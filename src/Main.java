@@ -4,7 +4,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
 import mappers.*;
-import models.*;
+import model.*;
 import utils.ValidationUtil;
 
 public class Main {
@@ -841,40 +841,63 @@ public class Main {
         }
     }
 
-    private void viewAllOrders(){
+    private void viewAllOrder() {
         try {
             List<Order> allOrders = orderMapper.findAll();
-            
+
             if (allOrders.isEmpty()) {
-                System.out.println("Tidak ada pesanan!");
-                return;
+            System.out.println("Tidak ada pesanan!");
+            return;
             }
-            
+
             System.out.println("\n" + "=".repeat(100));
             System.out.println("LAPORAN SEMUA PESANAN");
             System.out.println("=".repeat(100));
-            System.out.printf("%-5s %-15s %-10s %-10s %-20s %-12s %-15s\n", 
-                "ID", "Customer", "Tabel", "Items", "Tanggal", "Total", "Status");
+
+            System.out.printf(
+                "%-5s %-15s %-10s %-10s %-20s %-12s %-15s\n",
+                "ID", "Customer", "Tabel", "Items", "Tanggal", "Total", "Status"
+            );
+
             ValidationUtil.printSeparator();
-            
-            for (Order order : allOrders) {
-                Customer customer = customerMapper.findById(order.getCustomerId());
-                Table table = tableMapper.findById(order.getTableId());
-                
-                System.out.printf("%-5d %-15s %-10s %-10d %-20s %s %-15s\n", 
-                    order.getId(),
-                    truncateString(customer != null ? customer.getNama() : "N/A", 15),
-                    table != null ? table.getNomorMeja() : "N/A",
-                    order.getOrderItems().size(),
-                    order.getTanggalPesanan().toString().substring(0, 10),
-                    ValidationUtil.formatRupiah(order.getTotalHarga()),
-                    order.getStatus());
-            }
-            
+
+        for (Order order : allOrders) {
+
+            Customer customer = customerMapper.findById(order.getCustomerId());
+            Table table = tableMapper.findById(order.getTableId());
+
+            String tanggal = order.getTanggalPesanan() != null
+                    ? order.getTanggalPesanan().toString().substring(0, 10)
+                    : "N/A";
+
+            int totalItems = (order.getOrderItems() != null)
+                    ? order.getOrderItems().size()
+                    : 0;
+
+            String namaCustomer = (customer != null)
+                    ? truncateString(customer.getNama(), 15)
+                    : "N/A";
+
+            String nomorMeja = (table != null)
+                    ? String.valueOf(table.getNomorMeja())
+                    : "N/A";
+
+            System.out.printf(
+                "%-5d %-15s %-10s %-10d %-20s %s %-15s\n",
+                order.getId(),
+                namaCustomer,
+                nomorMeja,
+                totalItems,
+                tanggal,
+                ValidationUtil.formatRupiah(order.getTotalHarga()),
+                order.getStatus()
+            );
+        }
+
             System.out.println("=".repeat(100));
-            
-        } catch (SQLException e) {
-            System.err.println("Error: " + e.getMessage());
+
+         } catch (SQLException e) {
+             System.err.println("Error: " + e.getMessage());
         }
     }
 
@@ -929,7 +952,7 @@ public class Main {
         
         switch (choice) {
             case 1:
-                displayAllOrdersReport();
+                displayAllOrder();
                 break;
             case 2:
                 displayOrdersByStatus();
@@ -944,7 +967,7 @@ public class Main {
         }
     }
 
-    private void displayAllOrdersReport() throws SQLException {
+    private void displayAllOrder() throws SQLException {
         List<Order> allOrders = orderMapper.findAll();
         
         if (allOrders.isEmpty()) {
