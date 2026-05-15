@@ -4,7 +4,7 @@ import database.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import models.OrderItem;
+import model.OrderItem;
 
 public class OrderItemMapper {
 
