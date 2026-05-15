@@ -947,56 +947,24 @@ public class Main {
         System.out.println("3. Filter berdasarkan Customer");
         System.out.println("4. Kembali");
         System.out.println("=".repeat(50));
-        
+
         int choice = ValidationUtil.readInt("Pilih (1-4): ");
-        
+
         switch (choice) {
             case 1:
-                displayAllOrder();
-                break;
+                viewAllOrder();
+            break;
             case 2:
                 displayOrdersByStatus();
-                break;
+            break;
             case 3:
                 displayOrdersByCustomer();
-                break;
+            break;
             case 4:
-                break;
+            break;
             default:
-                System.out.println("Pilihan tidak valid!");
+            System.out.println("Pilihan tidak valid!");
         }
-    }
-
-    private void displayAllOrder() throws SQLException {
-        List<Order> allOrders = orderMapper.findAll();
-        
-        if (allOrders.isEmpty()) {
-            System.out.println("Tidak ada pesanan!");
-            return;
-        }
-        
-        System.out.println("\n" + "=".repeat(110));
-        System.out.println("LAPORAN SEMUA PESANAN");
-        System.out.println("=".repeat(110));
-        System.out.printf("%-5s %-20s %-10s %-10s %-15s %-15s %-15s\n", 
-            "ID", "Customer", "Meja", "Items", "Tanggal", "Total", "Status");
-        System.out.println("-".repeat(110));
-        
-        for (Order order : allOrders) {
-            Customer customer = customerMapper.findById(order.getCustomerId());
-            Table table = tableMapper.findById(order.getTableId());
-            
-            System.out.printf("%-5d %-20s %-10d %-10d %-15s %s %-15s\n", 
-                order.getId(),
-                truncateString(customer != null ? customer.getNama() : "N/A", 20),
-                table != null ? table.getNomorMeja() : 0,
-                order.getOrderItems().size(),
-                order.getTanggalPesanan().toString().substring(0, 10),
-                ValidationUtil.formatRupiah(order.getTotalHarga()),
-                order.getStatus());
-        }
-        System.out.println("=".repeat(110));
-        System.out.println("Total Pesanan: " + allOrders.size());
     }
 
     private void displayOrdersByStatus() throws SQLException {
