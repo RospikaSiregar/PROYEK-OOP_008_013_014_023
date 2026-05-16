@@ -14,7 +14,6 @@ public class Main {
     private final TableMapper tableMapper;
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
-    private final Scanner scanner;
 
     public Main() {
         this.menuMapper = new MenuMapper();
@@ -22,20 +21,18 @@ public class Main {
         this.tableMapper = new TableMapper();
         this.orderMapper = new OrderMapper();
         this.orderItemMapper = new OrderItemMapper();
-        this.scanner = new Scanner(System.in);
     }
 
     public static void main(String[] args) {
-        // Initialize Database
-        DatabaseInitializer.initializeDatabase();
-        DatabaseInitializer.insertSampleData();
+        try {
+            DatabaseInitializer.initializeDatabase();
+            DatabaseInitializer.insertSampleData();
 
-        // Run Application
-        Main app = new Main();
-        app.run();
-
-        // Close Database Connection
-        DatabaseConnection.closeConnection();
+            Main app = new Main();
+            app.run();
+        } finally {
+            DatabaseConnection.closeConnection();
+        }
     }
 
     public void run() {
@@ -205,14 +202,12 @@ public class Main {
         String kategori = ValidationUtil.readString("Kategori baru (tekan Enter untuk skip): ");
         if (!kategori.isEmpty()) menu.setKategori(kategori);
         
-        System.out.print("Harga baru (tekan Enter untuk skip): ");
-        String hargaStr = scanner.nextLine();
+        String hargaStr = ValidationUtil.readString("Harga baru (tekan Enter untuk skip): ");
         if (!hargaStr.isEmpty()) {
             menu.setHarga(Double.parseDouble(hargaStr));
         }
         
-        System.out.print("Stok baru (tekan Enter untuk skip): ");
-        String stokStr = scanner.nextLine();
+        String stokStr = ValidationUtil.readString("Stok baru (tekan Enter untuk skip): ");
         if (!stokStr.isEmpty()) {
             menu.setStok(Integer.parseInt(stokStr));
         }
@@ -701,6 +696,13 @@ public class Main {
                 System.out.println("Item ditambahkan: " + selectedMenu.getNama() + " x" + kuantitas + " = " + ValidationUtil.formatRupiah(orderItem.getSubtotal()));
             }
         }
+
+        List<OrderItem> orderItems = orderItemMapper.findByOrderId(orderId);
+        if (orderItems.isEmpty()) {
+            orderMapper.delete(orderId);
+            System.out.println("Pesanan dibatalkan karena tidak ada item yang ditambahkan.");
+            return;
+        }
         
         // 5. Update order total dan table status
         order.setTotalHarga(totalHarga);
@@ -719,7 +721,7 @@ public class Main {
         System.out.println("Status: " + order.getStatus());
         System.out.println("-".repeat(60));
         
-        List<OrderItem> orderItems = orderItemMapper.findByOrderId(orderId);
+        orderItems = orderItemMapper.findByOrderId(orderId);
         for (OrderItem item : orderItems) {
             System.out.printf("  %s x%d = %s\n", item.getMenuNama(), item.getKuantitas(), ValidationUtil.formatRupiah(item.getSubtotal()));
         }
@@ -792,14 +794,13 @@ public class Main {
         
         order.setStatus(newStatus);
         orderMapper.update(order);
-        
-        // Jika selesai, bebaskan meja
-        if (newStatus.equals("Selesai")) {
-            Table table = tableMapper.findById(order.getTableId());
-            if (table != null) {
-                table.setStatus("Tersedia");
-                tableMapper.update(table);
-            }
+
+        if (newStatus.equals("Selesai") || newStatus.equals("Dibatalkan")) {
+            releaseTable(order.getTableId());
+        }
+
+        if (newStatus.equals("Dibatalkan")) {
+            restoreOrderInventory(order);
         }
         
         System.out.println("Status pesanan berhasil diupdate menjadi: " + newStatus);
@@ -821,21 +822,8 @@ public class Main {
             order.setStatus("Dibatalkan");
             orderMapper.update(order);
             
-            // Kembalikan stok menu
-            for (OrderItem item : order.getOrderItems()) {
-                Menu menu = menuMapper.findById(item.getMenuId());
-                if (menu != null) {
-                    menu.setStok(menu.getStok() + item.getKuantitas());
-                    menuMapper.update(menu);
-                }
-            }
-            
-            // Bebaskan meja
-            Table table = tableMapper.findById(order.getTableId());
-            if (table != null) {
-                table.setStatus("Tersedia");
-                tableMapper.update(table);
-            }
+            restoreOrderInventory(order);
+            releaseTable(order.getTableId());
             
             System.out.println("Pesanan berhasil dibatalkan!");
         }
@@ -1229,5 +1217,23 @@ public class Main {
         if (str == null) return "";
         if (str.length() <= length) return str;
         return str.substring(0, length - 3) + "...";
+    }
+
+    private void restoreOrderInventory(Order order) throws SQLException {
+        for (OrderItem item : order.getOrderItems()) {
+            Menu menu = menuMapper.findById(item.getMenuId());
+            if (menu != null) {
+                menu.setStok(menu.getStok() + item.getKuantitas());
+                menuMapper.update(menu);
+            }
+        }
+    }
+
+    private void releaseTable(int tableId) throws SQLException {
+        Table table = tableMapper.findById(tableId);
+        if (table != null) {
+            table.setStatus("Tersedia");
+            tableMapper.update(table);
+        }
     }
 }

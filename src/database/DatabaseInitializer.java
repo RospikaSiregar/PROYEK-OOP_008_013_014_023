@@ -1,6 +1,7 @@
 package database;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -88,10 +89,12 @@ public class DatabaseInitializer {
 
             // Check jika sudah ada data
             String checkMenu = "SELECT COUNT(*) as count FROM menu";
-            if (stmt.executeQuery(checkMenu).getInt("count") > 0) {
-                System.out.println("Database sudah berisi data sample, skip insert data.");
-                stmt.close();
-                return;
+            try (ResultSet rs = stmt.executeQuery(checkMenu)) {
+                if (rs.next() && rs.getInt("count") > 0) {
+                    System.out.println("Database sudah berisi data sample, skip insert data.");
+                    stmt.close();
+                    return;
+                }
             }
 
             // Insert Menu Makanan
